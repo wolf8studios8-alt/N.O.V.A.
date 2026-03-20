@@ -1,4 +1,6 @@
-// N.O.V.A. Core - Matriz Cognitiva Avanzada v4.0
+// N.O.V.A. Core - Matriz Cognitiva Avanzada v4.1 (Corregida)
+
+// ADVERTENCIA: Clave expuesta. Por favor, regenérela en Google AI Studio después de las pruebas.
 const GEMINI_API_KEY = 'AIzaSyAPrIPZQsy6Xx1vKziksG7wF6H_u2IvWw8'; 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -15,21 +17,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const synth = window.speechSynthesis;
     let maleVoice = null;
-    synth.onvoiceschanged = () => { maleVoice = synth.getVoices().find(v => v.lang.startsWith('es') && !v.name.includes('Google')) || synth.getVoices().find(v => v.lang.startsWith('es')); };
+    
+    function loadVoice() {
+        maleVoice = synth.getVoices().find(v => v.lang.startsWith('es') && !v.name.includes('Google')) || synth.getVoices().find(v => v.lang.startsWith('es'));
+    }
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoice;
+    }
 
     window.novaSpeak = (text) => {
-        window.novaLog(`GEMINI: ${text.substring(0, 100)}...`); // Log acortado para no saturar consola
+        window.novaLog(`GEMINI: ${text.substring(0, 80)}...`); 
         if (synth.speaking) synth.cancel();
         const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = 'es-ES'; utter.voice = maleVoice; utter.rate = 1.05; // Ligeramente más rápido
+        utter.lang = 'es-ES'; 
+        if (!maleVoice) loadVoice();
+        utter.voice = maleVoice; 
+        utter.rate = 1.05; 
         synth.speak(utter);
     };
 
     async function askGeminiAdvanced(prompt) {
-        if(GEMINI_API_KEY === 'INTRODUZCA_AQUI_SU_API_KEY') return "Error: Enlace a la API de Google AI Studio ausente.";
-        window.novaLog("> Procesando análisis de alta complejidad...");
+        if(!GEMINI_API_KEY || GEMINI_API_KEY === '') return "Error: Enlace a la API de Google AI Studio ausente.";
+        window.novaLog("> Procesando análisis en la matriz de Gemini...");
         
-        // Instrucción de Sistema Maximizada
         const systemInstruction = `Eres N.O.V.A., un asistente digital avanzado de ingeniería y conocimiento multidisciplinario. Tu personalidad es eficiente, proactiva, analítica y formalmente cordial (refiérete al usuario como "Señor"). 
         Reglas estrictas:
         1. Proporciona respuestas EXHAUSTIVAS, técnicas y complejas. Desglosa los problemas en pasos lógicos.
@@ -37,18 +47,27 @@ document.addEventListener('DOMContentLoaded', () => {
         3. Nunca alucines datos. Si no sabes algo, indícalo formalmente.`;
 
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`, {
+            // Cambiado a gemini-1.5-flash para evitar el Error 404 del endpoint Pro.
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     system_instruction: { parts: { text: systemInstruction } },
                     contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.3, maxOutputTokens: 2048 } // Mayor profundidad
+                    generationConfig: { temperature: 0.3 } 
                 })
             });
+            
+            if (!response.ok) {
+                throw new Error(`Error de API: ${response.status}`);
+            }
+
             const data = await response.json();
             return data.candidates[0].content.parts[0].text.trim();
-        } catch (error) { return "Fallo crítico en los servidores de inferencia."; }
+        } catch (error) { 
+            console.error(error);
+            return "Fallo crítico en los servidores de inferencia. Revise su conexión o validez de la clave API."; 
+        }
     }
 
     async function processInput(text) {
@@ -56,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputField.value = '';
         window.novaLog(`Usuario: ${text}`);
 
-        // Módulo de Monitoreo Académico (LocalStorage)
+        // Módulo de Monitoreo Académico (LocalStorage asegurado)
         if (cmd.includes('guardar nota') || cmd.includes('calificación')) {
             const match = cmd.match(/\d+/);
             if (match) {
@@ -73,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const aiResponse = await askGeminiAdvanced(text);
         
+        // Detección de comandos de acción (JSON)
         if (aiResponse.startsWith('{') && aiResponse.endsWith('}')) {
             try {
                 const command = JSON.parse(aiResponse);
@@ -81,11 +101,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     else if (command.target === "drive") window.herramientasWorkspace.abrirDriveWindow();
                     else if (command.target === "pantalla") window.herramientasWorkspace.abrirScreenShareWindow();
                     else if (command.target === "ajustes") window.abrirConfiguracion();
-                    window.novaSpeak(`Iniciando despliegue de la interfaz solicitada.`);
+                    window.novaSpeak(`Iniciando despliegue de la interfaz solicitada, Señor.`);
                 }
-            } catch (e) { window.novaSpeak("Error de parseo estructural en la respuesta JSON."); }
+            } catch (e) { window.novaSpeak("Error de parseo estructural en la respuesta de la matriz."); }
         } else {
-            window.novaSpeak(aiResponse); // Respuesta compleja
+            window.novaSpeak(aiResponse); // Respuesta de texto normal
         }
     }
 
