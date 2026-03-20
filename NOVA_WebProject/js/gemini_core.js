@@ -1,5 +1,6 @@
-// N.O.V.A. Core - Matriz Cognitiva Avanzada v4.2 (Corrección de Endpoint)
+// N.O.V.A. Core - Matriz Cognitiva Avanzada v5.0 (Generación 3)
 
+// ADVERTENCIA: Clave expuesta. Por favor, regenérela en Google AI Studio después de las pruebas.
 const GEMINI_API_KEY = 'AIzaSyAPrIPZQsy6Xx1vKziksG7wF6H_u2IvWw8'; 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -37,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function askGeminiAdvanced(prompt) {
         if(!GEMINI_API_KEY || GEMINI_API_KEY === '') return "Error: Enlace a la API de Google AI Studio ausente.";
-        window.novaLog("> Procesando análisis en la matriz de Gemini...");
+        window.novaLog("> Procesando análisis en la matriz Gemini 3.0...");
         
         const systemInstruction = `Eres N.O.V.A., un asistente digital avanzado de ingeniería y conocimiento multidisciplinario. Tu personalidad es eficiente, proactiva, analítica y formalmente cordial (refiérete al usuario como "Señor"). 
         Reglas estrictas:
@@ -46,8 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
         3. Nunca alucines datos. Si no sabes algo, indícalo formalmente.`;
 
         try {
-            // PARCHE: Uso de la etiqueta -latest garantizada por Google AI Studio
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
+            // ACTUALIZACIÓN DE ENDPOINT: Invocando la arquitectura de Generación 3
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -65,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return data.candidates[0].content.parts[0].text.trim();
         } catch (error) { 
             console.error(error);
-            return "Fallo crítico en los servidores de inferencia. Revise su conexión o validez de la clave API."; 
+            return "Fallo crítico en los servidores de inferencia. Revise su conexión o validez de la clave API para este modelo."; 
         }
     }
 
@@ -74,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputField.value = '';
         window.novaLog(`Usuario: ${text}`);
 
-        // Módulo de Monitoreo Académico (LocalStorage)
+        // Módulo de Monitoreo Académico (LocalStorage asegurado estructuralmente)
         if (cmd.includes('guardar nota') || cmd.includes('calificación')) {
             const match = cmd.match(/\d+/);
             if (match) {
@@ -91,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const aiResponse = await askGeminiAdvanced(text);
         
+        // Detección de comandos de acción (JSON)
         if (aiResponse.startsWith('{') && aiResponse.endsWith('}')) {
             try {
                 const command = JSON.parse(aiResponse);
@@ -103,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (e) { window.novaSpeak("Error de parseo estructural en la respuesta de la matriz."); }
         } else {
-            window.novaSpeak(aiResponse); 
+            window.novaSpeak(aiResponse); // Respuesta de texto normal
         }
     }
 
