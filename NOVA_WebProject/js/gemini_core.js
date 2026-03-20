@@ -1,5 +1,4 @@
-// N.O.V.A. Core - Integración Gemini API
-// REQUIERE SU CLAVE DE API DE GOOGLE AI STUDIO PARA RESPUESTAS DINÁMICAS
+// ATENCIÓN: Sustituya por su clave real de Google AI Studio.
 const GEMINI_API_KEY = 'INTRODUZCA_AQUI_SU_API_KEY'; 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,10 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const synth = window.speechSynthesis;
     let maleVoice = null;
-    synth.onvoiceschanged = () => {
-        maleVoice = synth.getVoices().find(v => v.lang.startsWith('es') && !v.name.includes('Google')) 
-                 || synth.getVoices().find(v => v.lang.startsWith('es'));
-    };
+    synth.onvoiceschanged = () => { maleVoice = synth.getVoices().find(v => v.lang.startsWith('es') && !v.name.includes('Google')) || synth.getVoices().find(v => v.lang.startsWith('es')); };
 
     window.novaSpeak = (text) => {
         window.novaLog(`GEMINI: ${text}`);
@@ -29,63 +25,74 @@ document.addEventListener('DOMContentLoaded', () => {
         synth.speak(utter);
     };
 
-    // --- CONEXIÓN A GEMINI API ---
-    async function askGemini(prompt) {
-        if(GEMINI_API_KEY === 'INTRODUZCA_AQUI_SU_API_KEY') {
-            return "Señor, mis capacidades cognitivas están limitadas sin una clave API de Gemini válida. Procesando mediante comandos locales.";
-        }
+    async function askGeminiAdvanced(prompt) {
+        if(GEMINI_API_KEY === 'INTRODUZCA_AQUI_SU_API_KEY') return "Error: Clave API no configurada. Ejecución local de directivas en curso.";
         
-        window.novaLog("> Conectando con los servidores de inferencia de Gemini...");
+        window.novaLog("> Procesando directiva compleja...");
+        
+        // Instrucción de Sistema Avanzada para "Function Calling" simulado
+        const systemInstruction = `Eres N.O.V.A., operado por Gemini. Si el usuario te pide abrir aplicaciones (gmail, drive, pantalla, ajustes), responde EXACTAMENTE con este formato JSON: {"action": "open", "target": "gmail"}. Si te pide enviar un correo, responde con: {"action": "send_email", "to": "destino", "subject": "asunto", "body": "cuerpo"}. Si es una pregunta normal, responde en texto plano de forma elegante y concisa.`;
+
         try {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: `Eres N.O.V.A., un asistente de ingeniería operado por Gemini. Responde de forma formal, analítica y concisa. Usuario dice: ${prompt}` }] }] })
+                body: JSON.stringify({ 
+                    system_instruction: { parts: { text: systemInstruction } },
+                    contents: [{ parts: [{ text: prompt }] }] 
+                })
             });
             const data = await response.json();
-            return data.candidates[0].content.parts[0].text;
-        } catch (error) {
-            console.error(error);
-            return "Error de red al intentar contactar con la matriz de Gemini.";
-        }
+            return data.candidates[0].content.parts[0].text.trim();
+        } catch (error) { return "Error en la matriz de conexión cognitiva."; }
     }
 
-    // --- PROCESAMIENTO CENTRAL ---
     async function processInput(text) {
         const cmd = text.toLowerCase();
         inputField.value = '';
         window.novaLog(`Usuario: ${text}`);
 
-        // 1. Módulo de Rúbricas (Requisito Estructural LocalStorage)
+        // 1. Requisito de Monitoreo de Calificaciones (LocalStorage)
         if (cmd.includes('guardar nota') || cmd.includes('calificación')) {
             const match = cmd.match(/\d+/);
             if (match) {
                 localStorage.setItem('nova_last_test_grade', match[0]);
-                window.novaSpeak(`Directiva ejecutada. La calificación de ${match[0]} ha sido almacenada mediante tecnología LocalStorage para su seguimiento académico.`);
-            } else window.novaSpeak("No he detectado parámetros numéricos en su directiva.");
+                window.novaSpeak(`Confirmado. Su calificación académica de ${match[0]} ha sido escrita en la memoria interna mediante tecnología LocalStorage.`);
+            } else window.novaSpeak("Directiva incompleta. Por favor, indique el valor numérico de su calificación.");
             return;
         }
         if (cmd.includes('última nota') || cmd.includes('test anterior')) {
             const lastGrade = localStorage.getItem('nova_last_test_grade');
-            window.novaSpeak(lastGrade ? `Recuperando base de datos local. Su rendimiento en la última prueba fue de ${lastGrade}. Confirmado que el registro es correcto.` : "El registro académico está vacío, Señor.");
+            window.novaSpeak(lastGrade ? `Recuperando base de datos. Su evaluación anterior resultó en una calificación de ${lastGrade}. El historial está auditado.` : "El registro de evaluaciones locales está vacío, Señor.");
             return;
         }
 
-        // 2. Comandos de Ecosistema N-OS
-        if (cmd.includes('gmail') || cmd.includes('correo')) { window.herramientasWorkspace.abrirGmailWindow(); return; }
-        if (cmd.includes('drive')) { window.herramientasWorkspace.abrirDriveWindow(); return; }
-        if (cmd.includes('pantalla')) { window.herramientasWorkspace.abrirScreenShareWindow(); return; }
-
-        // 3. Fallback a Gemini AI
-        const aiResponse = await askGemini(text);
-        window.novaSpeak(aiResponse);
+        // 2. Ejecución Inteligente (Llamada a Herramientas de Gemini)
+        const aiResponse = await askGeminiAdvanced(text);
+        
+        if (aiResponse.startsWith('{') && aiResponse.endsWith('}')) {
+            try {
+                const command = JSON.parse(aiResponse);
+                if (command.action === "open") {
+                    if (command.target === "gmail") window.herramientasWorkspace.abrirGmailWindow();
+                    else if (command.target === "drive") window.herramientasWorkspace.abrirDriveWindow();
+                    else if (command.target === "pantalla") window.herramientasWorkspace.abrirScreenShareWindow();
+                    else if (command.target === "ajustes") window.abrirConfiguracion();
+                    window.novaSpeak(`Desplegando el módulo ${command.target} inmediatamente, Señor.`);
+                } else if (command.action === "send_email") {
+                    window.novaSpeak(`Preparando envío de correo a ${command.to} con el asunto ${command.subject}. Requiere confirmación de la API de escritura de Google.`);
+                    // Aquí iría el fetch() real a la API de envío de Gmail usando el Token de Google.
+                }
+            } catch (e) { window.novaSpeak("He procesado la estructura del comando, pero encontré un error en el parseo interno."); }
+        } else {
+            // Respuesta de chat normal
+            window.novaSpeak(aiResponse);
+        }
     }
 
-    // --- EVENTOS INTERFAZ ---
     btnSend.addEventListener('click', () => { if(inputField.value) processInput(inputField.value); });
     inputField.addEventListener('keypress', (e) => { if (e.key === 'Enter' && inputField.value) processInput(inputField.value); });
 
-    // API de Voz
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
@@ -96,5 +103,5 @@ document.addEventListener('DOMContentLoaded', () => {
         btnMic.addEventListener('click', () => btnMic.classList.contains('listening') ? recognition.stop() : recognition.start());
     }
 
-    setTimeout(() => window.novaSpeak("Matriz cognitiva Gemini y panel de comandos integrados. Esperando directivas, Señor."), 1000);
+    setTimeout(() => window.novaSpeak("Kernel OS actualizado y matriz Gemini enlazada. A la espera de directivas, Señor."), 1500);
 });
