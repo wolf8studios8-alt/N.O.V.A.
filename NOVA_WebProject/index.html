@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>N.O.V.A. Virtual Mat</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0f1a;
+            color: #4facfe;
+            font-family: 'Courier New', Courier, monospace;
+            /* Rejilla holográfica de ingeniería */
+            background-image: 
+                linear-gradient(rgba(79, 172, 254, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(79, 172, 254, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #ui-container {
+            text-align: center;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(79, 172, 254, 0.5);
+        }
+
+        #status-log {
+            width: 80%;
+            max-width: 600px;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #4facfe;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 20px auto;
+            overflow-y: auto;
+            text-align: left;
+            box-shadow: inset 0 0 10px rgba(79, 172, 254, 0.2);
+        }
+
+        .btn-jarvis {
+            background: transparent;
+            border: 2px solid #4facfe;
+            color: #4facfe;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(79, 172, 254, 0.3);
+            text-transform: uppercase;
+        }
+
+        .btn-jarvis:active {
+            background: rgba(79, 172, 254, 0.3);
+            transform: scale(0.95);
+        }
+        
+        .listening {
+            border-color: #00ff88;
+            color: #00ff88;
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-container">
+        <h1>N.O.V.A. Sistema Táctil</h1>
+        <button id="btn-mic" class="btn-jarvis">Iniciar Reconocimiento de Voz</button>
+        <div id="status-log">
+            > Sistemas en línea. Esperando activación de micrófono...<br>
+        </div>
+    </div>
+
+    <script src="js/jarvis_core.js"></script>
+</body>
+</html>
