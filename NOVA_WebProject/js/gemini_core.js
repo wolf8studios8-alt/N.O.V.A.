@@ -1,6 +1,5 @@
-// N.O.V.A. Core - Matriz Cognitiva Avanzada v4.1 (Corregida)
+// N.O.V.A. Core - Matriz Cognitiva Avanzada v4.2 (Corrección de Endpoint)
 
-// ADVERTENCIA: Clave expuesta. Por favor, regenérela en Google AI Studio después de las pruebas.
 const GEMINI_API_KEY = 'AIzaSyAPrIPZQsy6Xx1vKziksG7wF6H_u2IvWw8'; 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -47,8 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
         3. Nunca alucines datos. Si no sabes algo, indícalo formalmente.`;
 
         try {
-            // Cambiado a gemini-1.5-flash para evitar el Error 404 del endpoint Pro.
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+            // PARCHE: Uso de la etiqueta -latest garantizada por Google AI Studio
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -75,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputField.value = '';
         window.novaLog(`Usuario: ${text}`);
 
-        // Módulo de Monitoreo Académico (LocalStorage asegurado)
+        // Módulo de Monitoreo Académico (LocalStorage)
         if (cmd.includes('guardar nota') || cmd.includes('calificación')) {
             const match = cmd.match(/\d+/);
             if (match) {
@@ -92,7 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const aiResponse = await askGeminiAdvanced(text);
         
-        // Detección de comandos de acción (JSON)
         if (aiResponse.startsWith('{') && aiResponse.endsWith('}')) {
             try {
                 const command = JSON.parse(aiResponse);
@@ -105,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (e) { window.novaSpeak("Error de parseo estructural en la respuesta de la matriz."); }
         } else {
-            window.novaSpeak(aiResponse); // Respuesta de texto normal
+            window.novaSpeak(aiResponse); 
         }
     }
 
