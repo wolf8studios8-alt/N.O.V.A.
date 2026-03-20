@@ -3,38 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>N.O.V.A. Sistema Central</title>
+    <title>N.O.V.A. - Operative System</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        body {
-            margin: 0; padding: 0; background-color: #0a0f1a; color: #4facfe;
-            font-family: 'Courier New', Courier, monospace;
-            background-image: 
-                linear-gradient(rgba(79, 172, 254, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(79, 172, 254, 0.1) 1px, transparent 1px);
-            background-size: 20px 20px;
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-            height: 100vh; overflow: hidden;
-        }
-        #ui-container { text-align: center; z-index: 10; margin-top: 10px; }
-        h1 { font-size: 1.8rem; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(79, 172, 254, 0.5); margin-bottom: 5px; }
-        #status-log {
-            width: 90vw; max-width: 600px; height: 120px; background: rgba(0, 0, 0, 0.6);
-            border: 1px solid #4facfe; border-radius: 5px; padding: 10px; margin: 10px auto;
-            overflow-y: auto; text-align: left; box-shadow: inset 0 0 10px rgba(79, 172, 254, 0.2); font-size: 0.9rem;
-        }
-        .btn-jarvis {
-            background: rgba(10, 15, 26, 0.8); border: 1px solid #4facfe; color: #4facfe;
-            padding: 10px 15px; font-size: 0.9rem; cursor: pointer; border-radius: 5px;
-            transition: all 0.3s ease; text-transform: uppercase; margin: 5px;
-        }
-        .btn-jarvis:active { background: rgba(79, 172, 254, 0.3); transform: scale(0.95); }
-        .listening { border-color: #00ff88; color: #00ff88; box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); }
-        #hologram-container {
-            width: 90vw; max-width: 800px; flex-grow: 1; margin: 10px 0 20px 0;
-            border: 1px solid rgba(79, 172, 254, 0.3); border-radius: 10px;
-            background: radial-gradient(circle, rgba(79, 172, 254, 0.05) 0%, rgba(0,0,0,0) 70%);
-            position: relative;
-        }
+        :root { --main-cyan: #4facfe; --glow-cyan: rgba(79, 172, 254, 0.6); --bg-dark: #05080f; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--bg-dark); color: var(--main-cyan); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
+        
+        #n-os-desktop { width: 100%; height: 100%; position: relative; background-image: radial-gradient(circle, rgba(10,20,40,1) 0%, rgba(5,8,15,1) 100%); display: flex; flex-direction: column; }
+        #taskbar { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 1px solid rgba(79, 172, 254, 0.3); border-radius: 50px; padding: 5px 15px; display: flex; align-items: center; z-index: 1000; box-shadow: 0 0 15px rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
+        h1 { font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; margin: 0 15px 0 0; color: #fff; text-shadow: 0 0 5px var(--main-cyan); }
+        .btn-system { background: transparent; border: none; color: var(--main-cyan); padding: 10px 15px; font-size: 0.9rem; cursor: pointer; border-radius: 25px; transition: all 0.3s ease; text-transform: uppercase; font-weight: bold; }
+        .btn-system:hover { background: rgba(79, 172, 254, 0.1); text-shadow: 0 0 5px #fff; }
+        
+        #n-os-workspace { flex-grow: 1; position: relative; width: 100%; height: 100%; z-index: 1; }
+        #hologram-3d-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.5; }
+        #status-console { position: absolute; top: 10px; left: 10px; width: 300px; height: 100px; background: rgba(0,0,0,0.7); border-radius: 5px; border: 1px solid rgba(79, 172, 254, 0.2); padding: 10px; font-family: 'Courier New', monospace; font-size: 0.8rem; overflow-y: auto; z-index: 100; pointer-events: none;}
+        .log-time { color: #888; margin-right: 5px; }
+
+        /* Estilos del Gestor de Ventanas (Minimizados para espacio) */
+        .n-os-window { position: absolute; background: rgba(10, 15, 26, 0.85); border: 1px solid rgba(79, 172, 254, 0.4); border-radius: 8px; backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column; z-index: 500; }
+        .active-window { border-color: var(--main-cyan); box-shadow: 0 0 25px var(--glow-cyan); }
+        .window-header { height: 30px; background: rgba(0,0,0,0.5); border-bottom: 1px solid rgba(79, 172, 254, 0.2); display: flex; align-items: center; justify-content: space-between; padding: 0 10px; cursor: move; user-select: none; }
+        .window-title { font-size: 0.8rem; font-weight: bold; color: #fff; }
+        .win-btn { width: 15px; height: 15px; border-radius: 50%; margin-left: 7px; border: none; cursor: pointer; }
+        .win-close { background-color: #ff5f56; }
+        .window-content { flex-grow: 1; position: relative; width: 100%; height: 100%; overflow: auto; color: white;}
+        .window-resizer { position: absolute; bottom: 0; right: 0; width: 15px; height: 15px; cursor: se-resize; }
+        .google-sim-frame { background: #fff; color: #000; padding: 10px; height: 100%; box-sizing: border-box;}
+        #screen-share-video { width: 100%; height: 100%; background: #000; }
+
+        /* --- NUEVO: CAJÓN DE APLICACIONES CIRCULAR --- */
+        #arc-launcher-btn { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); width: 60px; height: 60px; border-radius: 50%; background: rgba(0,0,0,0.8); border: 2px solid var(--main-cyan); color: var(--main-cyan); display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 2000; box-shadow: 0 0 15px var(--glow-cyan); transition: 0.3s; }
+        #arc-launcher-btn:hover { background: rgba(79, 172, 254, 0.2); transform: translateY(-50%) scale(1.1); }
+        
+        #arc-menu-container { position: absolute; right: 50px; top: 50%; width: 300px; height: 600px; transform: translateY(-50%); pointer-events: none; z-index: 1999; }
+        
+        .arc-item { position: absolute; width: 50px; height: 50px; border-radius: 50%; background: rgba(10, 15, 26, 0.9); border: 1px solid var(--main-cyan); display: flex; justify-content: center; align-items: center; color: white; cursor: pointer; pointer-events: auto; opacity: 0; transform: scale(0); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 0 10px rgba(0,0,0,0.8); }
+        
+        .arc-item:hover { border-color: #fff; background: var(--main-cyan); color: #000; box-shadow: 0 0 20px var(--glow-cyan); z-index: 2005; }
+        .arc-item .material-icons { font-size: 24px; }
+        
+        /* Tooltip del nombre de la app */
+        .arc-item::after { content: attr(data-name); position: absolute; left: -80px; background: rgba(0,0,0,0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.7rem; color: var(--main-cyan); border: 1px solid var(--main-cyan); opacity: 0; pointer-events: none; transition: 0.3s; white-space: nowrap; }
+        .arc-item:hover::after { opacity: 1; left: -100px; }
+
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
@@ -43,18 +55,30 @@
     <script src="https://apis.google.com/js/api.js" async defer></script>
 </head>
 <body>
-    <div id="ui-container">
-        <h1>N.O.V.A. Virtual Mat</h1>
-        <button id="btn-mic" class="btn-jarvis">Activar Micrófono</button>
-        <button id="btn-load-stl" class="btn-jarvis">Proyectar Local</button>
-        <button id="btn-google-auth" class="btn-jarvis" onclick="iniciarAutenticacionGoogle()">Conectar Ecosistema Google</button>
-        <div id="status-log">> Sistemas en línea. Módulos iniciados.<br></div>
+    <div id="n-os-desktop">
+        <div id="status-console">> N-OS v2.0 Kernel Inicializado.<br></div>
+
+        <div id="n-os-workspace">
+            <div id="hologram-3d-bg"></div>
+        </div>
+
+        <div id="arc-launcher-btn" title="Abrir Menú de Aplicaciones">
+            <i class="material-icons" style="font-size: 32px;">apps</i>
+        </div>
+        
+        <div id="arc-menu-container"></div>
+
+        <div id="taskbar">
+            <h1>N.O.V.A.</h1>
+            <button id="btn-mic" class="btn-system">Hablar</button>
+            <button id="btn-google-connect" class="btn-system" onclick="iniciarAutenticacionGoogle()">Enlazar Google</button>
+        </div>
     </div>
     
-    <div id="hologram-container"></div>
-
     <script src="js/hologram_renderer.js"></script>
+    <script src="js/window_manager.js"></script>
     <script src="js/workspace_tools.js"></script>
+    <script src="js/ui_effects.js"></script>
     <script src="js/jarvis_core.js"></script>
 </body>
 </html>
