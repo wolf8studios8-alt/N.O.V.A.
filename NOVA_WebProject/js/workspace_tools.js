@@ -48,68 +48,52 @@ window.iniciarAutenticacionGoogle = function() {
 
 window.herramientasWorkspace = {
     
-    // MÓDULO GMAIL (Interfaz Mejorada)
+    // MÓDULO GMAIL (Extracción Completa Decodificada)
     abrirGmailWindow: async function() {
-        let mailsHTML = `
-            <style>
-                .app-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--main-cyan); padding-bottom: 10px; margin-bottom: 15px; }
-                .app-title { font-size: 1.2rem; font-weight: bold; color: var(--main-cyan); }
-                .mail-card { background: #f8f9fa; border-left: 4px solid #ea4335; padding: 10px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                .mail-subject { font-weight: bold; color: #202124; margin-bottom: 5px; }
-                .mail-snippet { color: #5f6368; font-size: 0.85rem; }
-                .btn-open-real { background: #ea4335; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 0.8rem; }
-            </style>
-            <div class="app-header">
-                <span class="app-title">Comunicaciones N.O.V.A.</span>
-                <a href="https://mail.google.com" target="_blank" class="btn-open-real">Abrir Gmail Web</a>
-            </div>
-            <div id="mail-content">Cargando datos encriptados...</div>
-        `;
-
         const frame = document.createElement('div');
         frame.className = 'google-sim-frame';
-        frame.innerHTML = mailsHTML;
-        const win = window.WindowManager.createWindow('Terminal de Comunicaciones', frame, {w: 500, h: 400, y: 100});
-        
-        const contentDiv = win.querySelector('#mail-content');
+        frame.style.overflow = 'auto';
+        frame.innerHTML = `<div style="padding:20px; color:#1a73e8;">Extrayendo y desencriptando paquetes de datos de Google Servers...</div>`;
+        const win = window.WindowManager.createWindow('Terminal de Comunicaciones', frame, {w: 600, h: 500, y: 50});
 
         try {
             if (gapiInited && gapi.client.getToken()) {
-                const response = await gapi.client.gmail.users.messages.list({ 'userId': 'me', 'maxResults': 4 });
+                const response = await gapi.client.gmail.users.messages.list({ 'userId': 'me', 'maxResults': 3 });
                 const messages = response.result.messages;
-                
-                if (!messages || messages.length == 0) {
-                    contentDiv.innerHTML = '<div class="mail-card">Bandeja de entrada despejada, Señor.</div>';
-                } else {
-                    let cards = '';
-                    for (const msg of messages) {
-                        const msgData = await gapi.client.gmail.users.messages.get({ 'userId': 'me', 'id': msg.id });
-                        const headers = msgData.result.payload.headers;
-                        const subjectHeader = headers.find(h => h.name === 'Subject');
-                        const subject = subjectHeader ? subjectHeader.value : 'Sin Asunto';
-                        const snippet = msgData.result.snippet;
-                        
-                        cards += `
-                            <div class="mail-card">
-                                <div class="mail-subject">${subject}</div>
-                                <div class="mail-snippet">${snippet.substring(0, 80)}...</div>
-                            </div>
-                        `;
+                let htmlContent = '<h3 style="border-bottom:2px solid #ea4335; padding-bottom:5px;">Comunicaciones Recientes</h3>';
+
+                for (const msg of messages) {
+                    const msgData = await gapi.client.gmail.users.messages.get({ 'userId': 'me', 'id': msg.id, 'format': 'full' });
+                    const headers = msgData.result.payload.headers;
+                    const subject = headers.find(h => h.name === 'Subject')?.value || 'Sin Asunto';
+                    const from = headers.find(h => h.name === 'From')?.value || 'Desconocido';
+                    
+                    // Decodificación Base64 URL (Estructuralmente necesario para Gmail API)
+                    let bodyData = '';
+                    if (msgData.result.payload.parts) {
+                        const part = msgData.result.payload.parts.find(p => p.mimeType === 'text/plain');
+                        if (part && part.body.data) bodyData = part.body.data;
+                    } else if (msgData.result.payload.body.data) {
+                        bodyData = msgData.result.payload.body.data;
                     }
-                    contentDiv.innerHTML = cards;
+                    
+                    let bodyText = "Contenido no legible en texto plano.";
+                    if (bodyData) {
+                        bodyText = decodeURIComponent(escape(window.atob(bodyData.replace(/-/g, '+').replace(/_/g, '/'))));
+                    }
+
+                    htmlContent += `
+                        <div style="background:#f1f3f4; padding:15px; border-radius:8px; margin-bottom:15px; color:#202124;">
+                            <strong>De:</strong> ${from}<br>
+                            <strong>Asunto:</strong> ${subject}<hr style="border:0; border-top:1px solid #dadce0;">
+                            <div style="white-space: pre-wrap; font-family: monospace; font-size: 0.9em; max-height: 150px; overflow-y: auto; background:#fff; padding:10px; border:1px solid #ccc;">${bodyText}</div>
+                        </div>`;
                 }
+                frame.innerHTML = htmlContent;
             } else {
-                contentDiv.innerHTML = `
-                    <div class="mail-card" style="border-left-color: #ff5f56;">
-                        <div class="mail-subject" style="color: #ff5f56;">Acceso Denegado</div>
-                        <div class="mail-snippet">Debe pulsar "Enlazar Google" en la barra inferior para autorizar la extracción de datos.</div>
-                    </div>
-                `;
+                frame.innerHTML = `<div style="color:#ff5f56; padding:20px;">Acceso Denegado. Se requiere enlace OAuth 2.0.</div>`;
             }
-        } catch (err) { 
-            console.error(err);
-            contentDiv.innerHTML = `<div class="mail-card">Error de conexión: ${err.message}</div>`;
-        }
+        } catch (err) { frame.innerHTML = `<div style="color:red; padding:20px;">Error: ${err.message}</div>`; }
     },
 
     // MÓDULO DRIVE (Interfaz Mejorada)
