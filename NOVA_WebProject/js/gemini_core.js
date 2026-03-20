@@ -1,5 +1,5 @@
 // N.O.V.A. Core - Matriz Cognitiva Avanzada v4.0
-const GEMINI_API_KEY = 'INTRODUZCA_AQUI_SU_API_KEY'; 
+const GEMINI_API_KEY = 'AIzaSyAPrIPZQsy6Xx1vKziksG7wF6H_u2IvWw8'; 
 
 document.addEventListener('DOMContentLoaded', () => {
     const inputField = document.getElementById('cmd-input');
