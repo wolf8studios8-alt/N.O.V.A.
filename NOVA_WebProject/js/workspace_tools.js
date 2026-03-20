@@ -1,87 +1,79 @@
-const CLIENT_ID = '790599911679-1o8rufmv9p6u3vvqebgq6lcvq2bqbifi.apps.googleusercontent.com';
-// ATENCIÓN: Scopes elevados a nivel de Modificación/Escritura.
-const SCOPES = 'https://www.googleapis.com/auth/drive https://mail.google.com/ https://www.googleapis.com/auth/calendar';
-
-let tokenClient; let gapiInited = false; let gisinited = false;
-function gapiLoaded() { gapi.load('client', initializeGapiClient); }
-async function initializeGapiClient() {
-    await gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest', 'https://gmail.googleapis.com/$discovery/rest?version=v1'] });
-    gapiInited = true;
-}
-function gisLoaded() {
-    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' });
-    gisinited = true;
-}
-
-window.iniciarAutenticacionGoogle = function() {
-    if (!tokenClient && typeof google !== 'undefined') gisLoaded();
-    if (!tokenClient) return;
-    tokenClient.callback = async (resp) => {
-        if (resp.error !== undefined) throw (resp);
-        if (window.novaSpeak) window.novaSpeak("Privilegios elevados. Acceso de escritura concedido.");
-    };
-    if (gapi.client.getToken() === null) tokenClient.requestAccessToken({prompt: 'consent'});
-    else tokenClient.requestAccessToken({prompt: ''});
-};
-
 window.herramientasWorkspace = {
     abrirGmailWindow: async function() {
         const frame = document.createElement('div');
-        frame.className = 'google-sim-frame'; frame.style.overflow = 'auto';
-        frame.innerHTML = `<div style="padding:20px;">Accediendo a la matriz de correos...</div>`;
-        window.WindowManager.createWindow('Terminal de Comunicaciones', frame, {w: 500, h: 400, y: 100});
+        frame.className = 'google-sim-frame'; frame.style.overflow = 'auto'; frame.style.background = '#f4f7f6';
+        frame.innerHTML = `<div style="padding:20px; color:#1a73e8; text-align:center;"><div class="led-indicator led-online"></div> Sincronizando con matriz de correo...</div>`;
+        window.WindowManager.createWindow('Terminal de Comunicaciones Seguras', frame, {w: 650, h: 550, y: 50});
         
         try {
             if (gapiInited && gapi.client.getToken()) {
-                const response = await gapi.client.gmail.users.messages.list({ 'userId': 'me', 'maxResults': 4 });
-                const messages = response.result.messages;
-                let htmlContent = '';
-                for (const msg of messages) {
+                const response = await gapi.client.gmail.users.messages.list({ 'userId': 'me', 'maxResults': 5 });
+                let htmlContent = `<div style="padding: 15px; background: #fff; border-bottom: 2px solid #ea4335; position: sticky; top: 0; z-index: 10;">
+                    <h3 style="margin:0; color:#202124;"><i class="material-icons" style="vertical-align: middle;">mail</i> Bandeja de Entrada</h3>
+                </div><div style="padding: 15px;">`;
+
+                for (const msg of response.result.messages) {
                     const msgData = await gapi.client.gmail.users.messages.get({ 'userId': 'me', 'id': msg.id });
-                    const subject = msgData.result.payload.headers.find(h => h.name === 'Subject')?.value || 'Sin Asunto';
-                    htmlContent += `<div style="background:#f1f3f4; padding:10px; border-radius:4px; margin-bottom:5px; color:#000;"><strong>${subject}</strong><br><small>${msgData.result.snippet}</small></div>`;
+                    const headers = msgData.result.payload.headers;
+                    const subject = headers.find(h => h.name === 'Subject')?.value || 'Sin Asunto';
+                    const from = headers.find(h => h.name === 'From')?.value || 'Desconocido';
+                    const date = headers.find(h => h.name === 'Date')?.value || '';
+                    
+                    htmlContent += `
+                        <div style="background:#fff; padding:15px; border-radius:8px; border: 1px solid #dadce0; margin-bottom:15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                                <div><strong style="color:#202124;">${from.replace(/<.*>/, '')}</strong> <br>
+                                <span style="font-size:0.8rem; color:#5f6368;">${date.substring(0, 22)}</span></div>
+                            </div>
+                            <h4 style="margin: 0 0 10px 0; color:#1a73e8;">${subject}</h4>
+                            <div style="color:#3c4043; font-size: 0.9em; margin-bottom: 15px;">${msgData.result.snippet}...</div>
+                            <div style="display:flex; gap:10px; border-top: 1px solid #eee; padding-top: 10px;">
+                                <button onclick="window.novaSpeak('Comando de respuesta interceptado. Requiere confirmación de salida.')" style="background:#1a73e8; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;">Responder</button>
+                                <button onclick="this.parentElement.parentElement.style.display='none'; window.novaSpeak('Mensaje archivado en la matriz local.')" style="background:#fff; color:#5f6368; border:1px solid #dadce0; padding:5px 15px; border-radius:4px; cursor:pointer;">Archivar</button>
+                            </div>
+                        </div>`;
                 }
-                frame.innerHTML = htmlContent;
+                frame.innerHTML = htmlContent + `</div>`;
             } else { frame.innerHTML = `<div style="color:red; padding:20px;">Requiere enlace en Ajustes.</div>`; }
-        } catch (err) { frame.innerHTML = `Error: ${err.message}`; }
+        } catch (err) { frame.innerHTML = `Error de sincronización: ${err.message}`; }
     },
+
     abrirDriveWindow: async function() {
-        const frame = document.createElement('div'); frame.className = 'google-sim-frame'; frame.style.overflow = 'auto';
-        window.WindowManager.createWindow('Google Drive Explorer', frame, {w: 450, h: 350, x: 200, y: 150});
+        const frame = document.createElement('div'); frame.className = 'google-sim-frame'; frame.style.overflow = 'auto'; frame.style.background = '#fff';
+        window.WindowManager.createWindow('Google Drive Explorer', frame, {w: 500, h: 450, x: 200, y: 150});
         try {
             if (gapiInited && gapi.client.getToken()) {
-                const response = await gapi.client.drive.files.list({ 'pageSize': 8, 'fields': 'files(name)', 'q': "mimeType != 'application/vnd.google-apps.folder'" });
-                let items = ''; response.result.files.forEach(f => items += `<div style="padding:5px; border-bottom:1px solid #ccc; color:#000;">${f.name}</div>`);
-                frame.innerHTML = items;
+                const response = await gapi.client.drive.files.list({ 
+                    'pageSize': 10, 
+                    'fields': 'files(id, name, mimeType, modifiedTime, size)', 
+                    'q': "mimeType != 'application/vnd.google-apps.folder'" 
+                });
+                let items = `<div style="padding: 15px; background: #f8f9fa; border-bottom: 2px solid #1a73e8; position: sticky; top: 0;">
+                    <h3 style="margin:0; color:#202124;"><i class="material-icons" style="vertical-align: middle;">storage</i> Almacenamiento Estructural</h3>
+                </div><div style="padding: 10px;">`;
+                
+                response.result.files.forEach(f => {
+                    const sizeMB = f.size ? (f.size / 1048576).toFixed(2) + ' MB' : '--';
+                    items += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #eee; hover:background:#f1f3f4;">
+                        <div style="flex-grow:1; overflow:hidden;">
+                            <div style="font-weight:bold; color:#202124; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${f.name}</div>
+                            <div style="font-size:0.75rem; color:#80868b;">Modificado: ${new Date(f.modifiedTime).toLocaleDateString()} | Tamaño: ${sizeMB}</div>
+                        </div>
+                        <button onclick="window.novaSpeak('Analizando metadatos del archivo ${f.name}...');" style="background:transparent; border:none; color:#1a73e8; cursor:pointer;"><i class="material-icons">info</i></button>
+                    </div>`;
+                });
+                frame.innerHTML = items + `</div>`;
             } else { frame.innerHTML = `<div style="color:red; padding:20px;">Requiere enlace en Ajustes.</div>`; }
         } catch (err) { frame.innerHTML = `Error: ${err.message}`; }
     },
+
     abrirScreenShareWindow: async function() {
         try {
             const mediaStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "always" }, audio: false });
-            const video = document.createElement('video'); video.autoplay = true; video.srcObject = mediaStream; video.style.width = '100%';
-            const win = window.WindowManager.createWindow('Monitor de Telemetría', video, {w: 640, h: 480});
+            const video = document.createElement('video'); video.autoplay = true; video.srcObject = mediaStream; video.style.width = '100%'; video.style.height = '100%'; video.style.objectFit = 'contain'; video.style.background = '#000';
+            const win = window.WindowManager.createWindow('Monitor de Telemetría', video, {w: 700, h: 500});
             win.querySelector('.win-close').addEventListener('click', () => mediaStream.getTracks().forEach(t => t.stop()));
         } catch (err) { console.error(err); }
     }
 };
-
-window.abrirConfiguracion = function() {
-    const hasToken = (typeof gapi !== 'undefined' && gapi.client && gapi.client.getToken() !== null);
-    const lastGrade = localStorage.getItem('nova_last_test_grade') || 'Sin registros';
-    const configHTML = `
-        <div style="padding: 15px; color: #fff; font-family: sans-serif;">
-            <h3 style="color: var(--main-cyan);">Privilegios de Red</h3>
-            <p>Estado OAuth: ${hasToken ? '<span style="color:#00ff88">Sincronizado (Lectura/Escritura)</span>' : '<span style="color:#ff5f56">Desconectado</span>'}</p>
-            <button style="background: var(--main-cyan); border:none; padding:8px; border-radius:4px; cursor:pointer;" onclick="iniciarAutenticacionGoogle();">Enlazar Cuenta</button>
-            <h3 style="color: var(--main-cyan); margin-top:20px;">Memoria Local</h3>
-            <p>Última Calificación: <strong style="color:#00ff88;">${lastGrade}</strong></p>
-        </div>`;
-    const frame = document.createElement('div'); frame.style.width = '100%'; frame.style.height = '100%'; frame.style.background = 'rgba(5, 8, 15, 0.95)'; frame.innerHTML = configHTML;
-    window.WindowManager.createWindow('Configuración del Sistema', frame, {w: 400, h: 350, x: 100, y: 100});
-};
-
-setTimeout(() => {
-    if (typeof gapi !== 'undefined' && !gapiInited) gapiLoaded();
-    if (typeof google !== 'undefined' && !gisinited) gisLoaded();
-}, 1000);
