@@ -10,7 +10,7 @@ class NOSTextEditor {
     /**
      * Crea una nueva terminal N-OS en el área de trabajo.
      * @param {string} title Título de la ventana.
-     * @param {HTMLElement|string} content Contenido HTML o elemento para el interior.
+     * @param {HTMLElement|string} content Contenido HTML o elemento para el interio
      * @param {object} options Opciones de posición y tamaño.
      */
     createWindow(title, content, options = {}) {
